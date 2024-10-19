@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Flower, Smile, Frown, Meh, MessageSquare, Wind, Book, Phone } from 'lucide-react'
 import Link from 'next/link'
+import WeeklyMoodTracker from './WeeklyMoodTracker'
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -20,6 +21,18 @@ export default function MentalHealth() {
   const [meditationTime, setMeditationTime] = useState(0)
   const [isMeditating, setIsMeditating] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  const moodData = [1, 2, 3, 4, 1, 4, 2];
+
+  // const [weeklyMood, setWeeklyMood] = useState([
+  //   { day: 'Mon', mood: 7 },
+  //   { day: 'Tue', mood: 6 },
+  //   { day: 'Wed', mood: 8 },
+  //   { day: 'Thu', mood: 5 },
+  //   { day: 'Fri', mood: 7 },
+  //   { day: 'Sat', mood: 9 },
+  //   { day: 'Sun', mood: 8 },
+  // ])
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined
@@ -65,41 +78,52 @@ export default function MentalHealth() {
       <motion.div initial="hidden" animate="visible" variants={fadeIn} transition={{ duration: 0.5, delay: 0.2 }}>
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Smile className="w-6 h-6 mr-2 text-yellow-500" />
-                Mood Tracker
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">How are you feeling today?</label>
-                <div className="flex items-center space-x-4">
-                  <Slider
-                    value={[mood]}
-                    onValueChange={(value) => setMood(value[0])}
-                    max={10}
-                    step={1}
-                    className="flex-grow"
-                  />
-                  {getMoodIcon(mood)}
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Smile className="w-6 h-6 mr-2 text-yellow-500" />
+              Mood Tracker
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="daily" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="daily">Daily</TabsTrigger>
+                <TabsTrigger value="weekly">Weekly</TabsTrigger>
+              </TabsList>
+              <TabsContent value="daily" className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">How are you feeling today?</label>
+                  <div className="flex items-center space-x-4">
+                    <Slider
+                      value={[mood]}
+                      onValueChange={(value) => setMood(value[0])}
+                      max={10}
+                      step={1}
+                      className="flex-grow"
+                    />
+                    {getMoodIcon(mood)}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">How many hours did you sleep last night?</label>
-                <div className="flex items-center space-x-4">
-                  <Slider
-                    value={[sleep]}
-                    onValueChange={(value) => setSleep(value[0])}
-                    max={12}
-                    step={0.5}
-                    className="flex-grow"
-                  />
-                  <span className="font-semibold">{sleep} hrs</span>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">How many hours did you sleep last night?</label>
+                  <div className="flex items-center space-x-4">
+                    <Slider
+                      value={[sleep]}
+                      onValueChange={(value) => setSleep(value[0])}
+                      max={12}
+                      step={0.5}
+                      className="flex-grow"
+                    />
+                    <span className="font-semibold">{sleep} hrs</span>
+                  </div>
                 </div>
-              </div>
-              <Button className="w-full">Save Today&apos;s Check-in</Button>
-            </CardContent>
+                <Button className="w-full">Save Today's Check-in</Button>
+              </TabsContent>
+              <TabsContent value="weekly">
+                <WeeklyMoodTracker moodData={moodData}></WeeklyMoodTracker>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
           </Card>
           <Card>
             <CardHeader>
