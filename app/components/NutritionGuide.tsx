@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Sun, Utensils, Moon, Cookie, Apple } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import axios from 'axios'
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -10,6 +12,8 @@ const fadeIn = {
 }
 
 export default function NutritionGuide() {
+  const { data: session } = useSession()
+
   const [nutritionValues, setNutritionValues] = useState({
     calories: { value: 1200, target: 2400 },
     protein: { value: 35, target: 71 },
@@ -23,10 +27,56 @@ export default function NutritionGuide() {
     field: 'value' | 'target',
     newValue: number
   ) => {
-    setNutritionValues(prev => ({
-      ...prev,
-      [nutrient]: { ...prev[nutrient], [field]: newValue }
-    }));
+    const updatedNutrition = {
+      ...nutritionValues,
+      [nutrient]: { ...nutritionValues[nutrient], [field]: newValue }
+    };
+
+    setNutritionValues(updatedNutrition);
+
+    handleSaveNutition(updatedNutrition);
+  };
+
+  useEffect(() => {
+    const fetchSymptoms = async () => {
+      if (session) {
+        try {
+          const nutritionResponse = await axios.get(`/api/nutrition?userid=${(session?.user as any)?.id}`);
+          if(nutritionResponse.data) 
+            setNutritionValues(nutritionResponse.data);
+          console.log('Nutrition:', nutritionResponse.data);
+        } catch (error) {
+          console.error('Error fetching nutrition:', error);
+        }
+      }
+    }
+    fetchSymptoms();
+  }, [session])
+
+  const handleSaveNutition = async (updatedNutrition: typeof nutritionValues) => {
+    if (session) {
+      try {
+        const body = {
+          userId: parseInt((session?.user as any)?.id, 10),
+          calorie: updatedNutrition.calories.value,
+          calorieReq: updatedNutrition.calories.target,
+          protein: updatedNutrition.protein.value,
+          proteinReq: updatedNutrition.protein.target,
+          fats: updatedNutrition.fats.value,
+          fatsReq: updatedNutrition.fats.target,
+          carbs: updatedNutrition.carbs.value,
+          carbsReq: updatedNutrition.carbs.target,
+          fibre: updatedNutrition.fibre.value,
+          fibreReq: updatedNutrition.fibre.target,
+          createdAt: new Date(),
+        };
+        await axios.post('/api/nutrition', body);
+
+        console.log('Nutrition saved:', body);
+      } catch (error) {
+        console.error('Error updating nutrition:', (error as any).response.data);
+      }
+    }
   };
 
   return (

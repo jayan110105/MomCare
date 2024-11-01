@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { HeartPulse , Footprints, Flower, Dumbbell, Activity, Waves, Plus } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import axios from 'axios'
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -16,19 +18,39 @@ const fadeIn = {
 }
 
 export default function ExerciseTracker() {
+  const { data: session } = useSession()
+
   const [activeTab, setActiveTab] = useState("today")
-  const [exerciseLog, setExerciseLog] = useState([
-    { type: 'Walking', duration: 30, intensity: 'Moderate' },
-    { type: 'Yoga', duration: 20, intensity: 'Low' },
-  ])
+  const [exerciseLog, setExerciseLog] = useState<{ type: string; duration: number; intensity: string }[]>([])
   const [newExercise, setNewExercise] = useState({ type: '', duration: '', intensity: '' })
+  const [totalMinutesExercised, setTotalMinutesExercised] = useState(0);
+  const [activeDays, setActiveDays] = useState(0);
 
   const addExercise = () => {
     if (newExercise.type && newExercise.duration && newExercise.intensity) {
       setExerciseLog([...exerciseLog, { ...newExercise, duration: parseInt(newExercise.duration) }])
+      handleAddExercise(newExercise);
       setNewExercise({ type: '', duration: '', intensity: '' })
     }
   }
+
+  const handleAddExercise = async (updatedExercises: typeof newExercise) => {
+    if (session) {
+      try {
+        const body = {
+          userId: parseInt((session?.user as any)?.id, 10),
+          type: updatedExercises.type,
+          duration: parseInt(updatedExercises.duration, 10),
+          intensity: updatedExercises.intensity,
+        };
+        await axios.post('/api/exercise', body);
+
+        fetchWeeklyProgress();
+      } catch (error) {
+        console.error('Error adding exercise:', (error as any).response.data);
+      }
+    }
+  };
 
   interface Recommendation {
     type: string;
@@ -37,10 +59,23 @@ export default function ExerciseTracker() {
 
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
 
+  const fetchWeeklyProgress = async () => {
+    if (session) {
+      try {
+        const weeklyProgressResponse = await axios.get(`/api/exercise/weekly?userid=${(session?.user as any)?.id}`);
+        setTotalMinutesExercised(weeklyProgressResponse.data.totalMinutesExercised);
+        setActiveDays(weeklyProgressResponse.data.daysActive);
+        console.log('Weekly Progress:', weeklyProgressResponse.data);
+      } catch (error) {
+        console.error('Error fetching Weekly Progress:', error);
+      }
+    }
+  }
+
   useEffect(() => {
     const fetchRecommendations = async () => {
       try {
-        const response = await fetch('/api/ExerciseRecommendation?trimester=first');
+        const response = await fetch(`/api/exercise/ExerciseRecommendation?userid=${(session?.user as any)?.id}`);
         const data = await response.json();
         setRecommendations(data);
         console.log('Exercise recommendations:', data);
@@ -48,11 +83,24 @@ export default function ExerciseTracker() {
         console.error('Error fetching exercise recommendations:', error);
       }
     };
-
     fetchRecommendations();
   }, []);
 
-  
+  useEffect(() => {    
+    const fetchExerciseLog = async () => {
+      if (session) {
+        try {
+          const exerciseLogResponse = await axios.get(`/api/exercise?userid=${(session?.user as any)?.id}&date=${new Date().toISOString()}`);
+          setExerciseLog(exerciseLogResponse.data);
+          console.log('Exercise Log:', exerciseLogResponse.data);
+        } catch (error) {
+          console.error('Error fetching Exercise Log:', error);
+        }
+      }
+    };
+    fetchExerciseLog();
+    fetchWeeklyProgress();
+  }, [session])  
 
   return (
     <div className="space-y-6">
@@ -170,16 +218,16 @@ export default function ExerciseTracker() {
                   <div>
                     <div className="flex justify-between mb-1">
                       <span>Minutes Exercised</span>
-                      <span>120 / 150 min</span>
+                      <span>{totalMinutesExercised} / 150 min</span>
                     </div>
-                    <Progress value={80} className="w-full" />
+                    <Progress value={(totalMinutesExercised/150)*100} className="w-full" />
                   </div>
                   <div>
                     <div className="flex justify-between mb-1">
                       <span>Days Active</span>
-                      <span>4 / 5 days</span>
+                      <span>{activeDays} / 5 days</span>
                     </div>
-                    <Progress value={80} className="w-full" />
+                    <Progress value={(activeDays/5)*100} className="w-full" />
                   </div>
                 </div>
               </CardContent>

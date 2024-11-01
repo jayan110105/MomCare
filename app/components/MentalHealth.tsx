@@ -8,7 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Flower, Smile, Frown, Meh, MessageSquare, Wind, Book, Phone } from 'lucide-react'
 import Link from 'next/link'
-import WeeklyMoodTracker from './WeeklyMoodTracker'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { useSession } from 'next-auth/react'
+import axios from 'axios'
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -16,23 +18,51 @@ const fadeIn = {
 }
 
 export default function MentalHealth() {
+  const { data: session } = useSession()
+
   const [mood, setMood] = useState(5)
   const [sleep, setSleep] = useState(7)
   const [meditationTime, setMeditationTime] = useState(0)
   const [isMeditating, setIsMeditating] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
-  const moodData = [1, 2, 3, 4, 1, 4, 2];
+  const [weeklyMood, setWeeklyMood] = useState([
+    { day: 'Mon', mood: 7 },
+    { day: 'Tue', mood: 6 },
+    { day: 'Wed', mood: 8 },
+    { day: 'Thu', mood: 5 },
+    { day: 'Fri', mood: 7 },
+    { day: 'Sat', mood: 9 },
+    { day: 'Sun', mood: 8 },
+  ])
 
-  // const [weeklyMood, setWeeklyMood] = useState([
-  //   { day: 'Mon', mood: 7 },
-  //   { day: 'Tue', mood: 6 },
-  //   { day: 'Wed', mood: 8 },
-  //   { day: 'Thu', mood: 5 },
-  //   { day: 'Fri', mood: 7 },
-  //   { day: 'Sat', mood: 9 },
-  //   { day: 'Sun', mood: 8 },
-  // ])
+  const fetchWeeklyMood = async () => {
+    try {
+      const response = await axios.get(`/api/mood/weekly?userid=${(session?.user as any)?.id}`); // Replace with dynamic userId as needed
+      console.log('Weekly mood:', response.data);
+      setWeeklyMood(response.data);
+    } catch (error) {
+      console.error('Failed to fetch weekly mood:', error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchMoodData = async () => {
+      if (session) {
+        try {
+          const response = await axios.get(`/api/mood?userid=${(session?.user as any)?.id}&date=${new Date().toISOString().split('T')[0]}`);
+          const moodData = response.data;
+          setMood(moodData.mood);
+          setSleep(moodData.sleep);
+        } catch (error) {
+          console.error('Error fetching mood data:', error);
+        }
+      }
+    };
+    fetchMoodData();
+    fetchWeeklyMood();
+  }, [session]);
+  
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined
@@ -52,6 +82,12 @@ export default function MentalHealth() {
     return <Smile className="w-6 h-6 text-green-500" />
   }
 
+  const getMoodColor = (value: number) => {
+    if (value <= 3) return "#ef4444" // red-500
+    if (value <= 7) return "#eab308" // yellow-500
+    return "#22c55e" // green-500
+  }
+
   const toggleMeditation = () => {
     setIsMeditating(!isMeditating)
   }
@@ -68,6 +104,46 @@ export default function MentalHealth() {
       setIsMeditating(false)
     }
   }
+
+  const handleMoodChange = async () => {
+    if (session) 
+    {
+      try
+      {
+        const body = {
+          userId: (session?.user as any)?.id,
+          date: new Date().toISOString().split('T')[0],
+          mood: mood,
+          sleep: sleep
+        }
+        console.log(body)
+        await axios.post('/api/mood', body)
+        fetchWeeklyMood();
+      } catch(error) {
+        console.error('Error updating mood:', error);
+      }
+    }
+  }
+
+  interface CustomTooltipProps {
+    active?: boolean;
+    payload?: { value: number }[];
+    label?: string;
+  }
+  
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-2 border border-gray-300 rounded shadow">
+          <p className="font-semibold">{`${label} : ${payload[0].value}`}</p>
+          <div className="flex justify-center mt-1">
+            {getMoodIcon(payload[0].value)}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="space-y-6">
@@ -117,10 +193,23 @@ export default function MentalHealth() {
                     <span className="font-semibold">{sleep} hrs</span>
                   </div>
                 </div>
-                <Button className="w-full">Save Today's Check-in</Button>
+                <Button className="w-full" onClick={handleMoodChange}>Save Today&apos;s Check-in</Button>
               </TabsContent>
               <TabsContent value="weekly">
-                <WeeklyMoodTracker moodData={moodData}></WeeklyMoodTracker>
+              <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={weeklyMood}>
+                      <XAxis dataKey="day" />
+                      <YAxis domain={[0, 10]} hide={true} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="mood">
+                        {weeklyMood.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={getMoodColor(entry.mood)} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </TabsContent>
             </Tabs>
           </CardContent>

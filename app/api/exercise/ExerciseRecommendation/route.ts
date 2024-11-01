@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 // Define the type for the keys of exerciseRecommendations
 type Trimester = 'first' | 'second' | 'third';
@@ -30,15 +33,42 @@ const exerciseRecommendations: Record<Trimester, { type: string; description: st
 
 // API handler
 export async function GET(request: Request) {
-  // Extract trimester from query parameters
-  const { searchParams } = new URL(request.url);
-  const trimester = searchParams.get('trimester')?.toLowerCase();
 
-  // Validate the trimester and return recommendations
-  if (trimester && exerciseRecommendations[trimester as Trimester]) {
-    return NextResponse.json(exerciseRecommendations[trimester as Trimester]);
+  const url = new URL(request.url);
+  const userId = url.searchParams.get('userid');
+
+  if (!userId) {
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
   }
 
-  // Return error if trimester is invalid or not provided
-  return NextResponse.json({ error: 'Please provide a valid trimester (first, second, third).' }, { status: 400 });
+  try {
+      // Fetch the metrics data for the specified user ID
+      const metrics = await prisma.metrics.findUnique({
+          where: { userId: Number(userId) },
+      });
+
+      if (!metrics || metrics.gestationalAge === undefined) {
+          return NextResponse.json({ error: 'No gestational age data found' }, { status: 404 });
+      }
+
+      const gestationalAge = metrics.gestationalAge;
+
+      // Determine the trimester based on gestational age
+      let trimester;
+      if (gestationalAge < 13) {
+          trimester = 'first';
+      } else if (gestationalAge < 28) {
+          trimester = 'second';
+      } else {
+          trimester = 'third';
+      }
+
+      // Assign recommendations based on the trimester
+      if (trimester && exerciseRecommendations[trimester as Trimester]) {
+        return NextResponse.json(exerciseRecommendations[trimester as Trimester]);
+      }
+    } catch (error) {
+      console.error('Error fetching metrics:', error);
+      return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
+  }
 }

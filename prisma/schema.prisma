@@ -18,5 +18,100 @@ model User {
   name      String
   email     String   @unique
   password  String   
+  
+  createdAt DateTime @default(now())
+  metrics   Metrics? @relation
+  metricsId Int?     @unique
+  reminders Reminder[]
+  symptom   Symptom?   @relation
+  symptomId Int?       @unique
+  nutrition Nutrition? @relation
+  nutritionId Int?     @unique
+  exercises    Exercise[]
+  moodTrackers Mood[]
+  checklists   Checklist[]
+}
+
+model Metrics {
+  id              Int      @id @default(autoincrement())
+  age             Int
+  bloodPressure   String
+  glucose         Int
+  heartRate       Int
+  gestationalAge  Int
+  createdAt       DateTime @default(now())
+  userId          Int      @unique
+  user            User     @relation(fields: [userId], references: [id])
+}
+
+model Reminder {
+  id        Int      @id @default(autoincrement())
+  text      String
+  date      DateTime
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Symptom {
+  id          Int      @id @default(autoincrement())
+  nausea      Int
+  fatigue     Int
+  moodSwings  Int
+  createdAt   DateTime @default(now())
+  userId      Int      @unique
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Nutrition {
+  id           Int      @id @default(autoincrement())
+  calorie      Int
+  calorieReq   Int
+  protein      Int
+  proteinReq   Int
+  fats         Int
+  fatsReq      Int
+  carbs        Int
+  carbsReq     Int
+  fibre        Int
+  fibreReq     Int
+  createdAt    DateTime @default(now())
+  userId       Int      @unique
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model Exercise {
+  id         Int      @id @default(autoincrement())
+  type       String  
+  duration   Int      
+  intensity  String   
+  date       DateTime @default(now())
+
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id]) 
+
+  @@index([userId, date]) 
+}
+
+model Mood {
+  id        Int      @id @default(autoincrement())
+  mood      Int      
+  sleep     Float    
+  date      DateTime @default(now()) @unique 
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id]) 
+
+  @@index([userId, date]) 
+}
+
+model Checklist {
+  id        Int      @id @default(autoincrement())
+  text      String   // The description of the checklist item
+  completed Boolean  @default(false) // The status of completion
+  userId    Int      // Foreign key to link to the User model
+  user      User     @relation(fields: [userId], references: [id]) // Relation to User model
+
   createdAt DateTime @default(now())
 }
+
+
+

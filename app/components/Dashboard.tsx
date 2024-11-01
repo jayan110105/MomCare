@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Calendar, Info, TrendingUp, Activity, CalendarHeart, HeartPulse , Plus, Edit2 } from 'lucide-react'
+import { Calendar, Info, TrendingUp, Activity, CalendarHeart, HeartPulse , Plus, Edit2} from 'lucide-react'
 import { Slider } from "@/components/ui/slider"
 import { useSession } from 'next-auth/react'
 import axios from 'axios'
@@ -14,18 +14,21 @@ export default function Dashboard() {
   const { data: session } = useSession()
 
   const [metrics, setMetrics] = useState({
-    Age: '26',
+    age: 26,
     bloodPressure: '120/80',
-    glucose: '95',
-    heartRate: '80',
+    glucose: 95,
+    heartRate: 80,
     fetalSize: 'ear of corn',
     fetalWeight: '1.3',
-    gestationalAge: '24',
+    gestationalAge: 24,
   })
+
+  const[gestationalAge, setGestationalAge] = useState(24);
 
   const [tips, setTips] = useState<string[]>([])
 
   useEffect(() => {
+
     const fetchTips = async () => {
       try {
         const response = await axios.get('/api/dashboard/pregnancyTips')
@@ -37,6 +40,38 @@ export default function Dashboard() {
 
     fetchTips()
   }, [])
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      if (session) {
+        try {
+          const metricsResponse = await axios.get(`/api/dashboard/metrics?userid=${(session?.user as any)?.id}`);
+          if(metricsResponse.data) 
+            setMetrics(metricsResponse.data);
+          console.log('Metrics:', metricsResponse.data);
+          setGestationalAge(metricsResponse.data.gestationalAge);
+        } catch (error) {
+          console.error('Error fetching metrics:', error);
+        }
+      }
+    };
+    
+    const fetchReminders = async () => {
+      if (session) {
+        try {
+          const remindersResponse = await axios.get(`/api/dashboard/reminders?userid=${(session?.user as any)?.id}`);
+          setReminders(remindersResponse.data);
+          console.log('Reminders:', remindersResponse.data);
+        } catch (error) {
+          console.error('Error fetching reminders:', error);
+        }
+      }
+    };
+    
+    fetchMetrics();
+    fetchReminders();
+  }, [session])
+
 
   useEffect(() => {
 
@@ -62,15 +97,53 @@ export default function Dashboard() {
   const [isEditing, setIsEditing] = useState<string | null>(null)
 
   const handleMetricChange = (metric: any, value: any) => {
-    setMetrics(prev => ({ ...prev, [metric]: value }))
+    const updatedMetrics = { ...metrics, [metric]: value };
+    setMetrics(updatedMetrics);
+  
+    console.log('Saving metrics:', updatedMetrics);
+  
+    // Pass the updated metrics directly to the save function
+    handleSaveMetrics(updatedMetrics);
   }
 
-  const handleAddReminder = () => {
-    if (newReminder.text && newReminder.date) {
-      setReminders(prev => [...prev, { id: Date.now(), ...newReminder }])
-      setNewReminder({ text: '', date: '' })
+  const handleSaveMetrics = async (updatedMetrics: typeof metrics) => {
+    if (session) {
+      try {
+        const body = {
+          userId: parseInt((session?.user as any)?.id, 10),
+          age: updatedMetrics.age,
+          bloodPressure: updatedMetrics.bloodPressure,
+          glucose: updatedMetrics.glucose,
+          heartRate: updatedMetrics.heartRate,
+          gestationalAge: updatedMetrics.gestationalAge,
+          createdAt: new Date(),
+        };
+        await axios.post('/api/dashboard/metrics', body);
+      } catch (error) {
+        console.error('Error updating metrics:', (error as any).response.data);
+      }
     }
-  }
+  };
+
+  const handleAddReminder = async () => {
+    if (newReminder.text && newReminder.date) {
+      setReminders(prev => [...prev, { id: Date.now(), ...newReminder }]);
+      
+      if (session) {
+        try {
+          const body = {
+            userId: Number((session?.user as any)?.id),
+            text: newReminder.text,
+            date: new Date(newReminder.date),
+          };
+          await axios.post('/api/dashboard/reminders', body);
+        } catch (error) {
+          console.error('Error updating reminders:', error);
+        }
+      }
+      setNewReminder({ text: '', date: '' });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -79,9 +152,9 @@ export default function Dashboard() {
         <div className="text-right">
           <p className="text-xl font-semibold text-pink-500">Week {metrics.gestationalAge}</p>
             <p className="text-sm text-gray-500">
-            {parseInt(metrics.gestationalAge) < 13
+            {metrics.gestationalAge < 13
               ? '1st Trimester'
-              : parseInt(metrics.gestationalAge) < 28
+              : metrics.gestationalAge < 28
               ? '2nd Trimester'
               : '3rd Trimester'}
             </p>
@@ -92,8 +165,8 @@ export default function Dashboard() {
         <MetricCard
           icon={<CalendarHeart className="w-8 h-8 text-indigo-500" />}
           title="Age"
-          value={metrics.Age}
-          onChange={(value) => handleMetricChange('weight', value)}
+          value={metrics.age.toString()}
+          onChange={(value) => handleMetricChange('age', parseInt(value))}
         />
         <MetricCard
           icon={<Activity className="w-8 h-8 text-red-500" />}
@@ -105,16 +178,16 @@ export default function Dashboard() {
         <MetricCard
           icon={<TrendingUp className="w-8 h-8 text-green-500" />}
           title="Glucose"
-          value={metrics.glucose}
+          value={metrics.glucose.toString()}
           unit="mg/dL"
-          onChange={(value) => handleMetricChange('glucose', value)}
+          onChange={(value) => handleMetricChange('glucose', parseInt(value))}
         />
         <MetricCard
           icon={<HeartPulse  className="w-8 h-8 text-red-700" />}
           title="Heart Rate"
-          value={metrics.heartRate}
+          value={metrics.heartRate.toString()}
           unit="bpm"
-          onChange={(value) => handleMetricChange('heartRate', value)}
+          onChange={(value) => handleMetricChange('heartRate', parseInt(value))}
         />
       </div>
 
@@ -136,18 +209,21 @@ export default function Dashboard() {
               {isEditing === 'fetal' ? (
                 <div className="flex items-center space-x-5">
                   <Slider
-                    value={[parseInt(metrics.gestationalAge)]}
-                    onValueChange={(value: [number]) => handleMetricChange('gestationalAge', value[0])}
+                    value={[gestationalAge]}
+                    onValueChange={(value: [number]) => setGestationalAge(value[0])}
                     max={40}
                     step={1}
                   />
-                  <span>{metrics.gestationalAge} weeks</span>
-                  <Button onClick={() => setIsEditing(null)}>Save</Button>
+                  <span>{gestationalAge} weeks</span>
+                  <Button onClick={() => {
+                    handleMetricChange('gestationalAge',gestationalAge);
+                    setIsEditing(null)
+                    }}>Save</Button>
                 </div>
               ) : (
                 <>
                   <p className="text-sm text-gray-600 mb-2">Your baby is now the size of {metrics.fetalSize} and weighs about {metrics.fetalWeight}.</p>
-                  <Progress value={(parseInt(metrics.gestationalAge)/40)*100} max={100} className="w-full" />
+                  <Progress value={(metrics.gestationalAge/40)*100} max={100} className="w-full" />
                   <p className="text-xs text-gray-500 mt-1">{metrics.gestationalAge} weeks out of 40</p>
                 </>
               )}

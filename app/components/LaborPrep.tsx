@@ -6,6 +6,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input"
 import { Heart, Droplet, Plus } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import axios from 'axios'
+
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -13,17 +16,43 @@ const fadeIn = {
 }
 
 export default function LaborPrep() {
+  const { data: session } = useSession()
+
   const [contractions, setContractions] = useState<{ start: Date; end: Date | null }[]>([])
   const [isContractionActive, setIsContractionActive] = useState(false)
   const [activeContractionTime, setActiveContractionTime] = useState(0)
-  const [checklist, setChecklist] = useState([
-    { id: 1, text: "Pack hospital bag", completed: false },
-    { id: 2, text: "Install car seat", completed: false },
-    { id: 3, text: "Prepare birth plan", completed: false },
-    { id: 4, text: "Tour birthing center", completed: false },
-    { id: 5, text: "Arrange childcare (if needed)", completed: false },
-  ])
+  const [checklist, setChecklist] = useState<{ id: number; text: string; completed: boolean }[]>([])
   const [newItem, setNewItem] = useState("")
+
+  useEffect(() => {
+    const fetchChecklist = async () => {
+      if (session) {
+        try {
+          const checklistResponse = await axios.get(`/api/laborPrep?userid=${(session?.user as any)?.id}`)
+          console.log('Checklist:', checklistResponse.data)
+          if (checklistResponse.data) setChecklist(checklistResponse.data)
+        } catch (error) {
+          console.error('Error fetching checklist:', error)
+        }
+      }
+    }
+    fetchChecklist()
+  },[session])
+
+  const saveChecklist = async (updatedItem: typeof newItem) => {
+    if (session) {
+      try {
+        const body = {
+          userId: (session?.user as any)?.id,
+          text: updatedItem,
+        }
+        await axios.post(`/api/laborPrep`, body)
+        console.log('Checklist saved successfully')
+      } catch (error) {
+        console.error('Error saving checklist:', error)
+      }
+    }
+  }
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined
@@ -52,16 +81,32 @@ export default function LaborPrep() {
     }
   }
 
-  const toggleChecklistItem = (id: number) => {
+  const toggleChecklistItem = async (id: number) => {
+    // Update the local state immediately for UI responsiveness
     setChecklist(checklist.map(item => 
       item.id === id ? { ...item, completed: !item.completed } : item
-    ))
-  }
+    ));
+  
+    // Find the current completed status to toggle it correctly
+    const currentItem = checklist.find(item => item.id === id);
+    if (!currentItem) return;
+  
+    try {
+      // Make the PUT request using axios to update the completed status on the server
+      await axios.put('/api/laborPrep', {
+        id,
+        completed: !currentItem.completed,
+      });
+    } catch (error) {
+      console.error('Error updating checklist item:', error);
+    }
+  };
 
   const addChecklistItem = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (newItem.trim() !== "") {
       setChecklist([...checklist, { id: Date.now(), text: newItem, completed: false }])
+      saveChecklist(newItem);
       setNewItem("")
     }
   }

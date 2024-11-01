@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { AlertCircle, Droplet , Moon , Meh } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import axios from 'axios'
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -11,15 +13,82 @@ const fadeIn = {
 }
 
 export default function SymptomTracker() {
+  const { data: session } = useSession()
+
   const [symptoms, setSymptoms] = useState({
     nausea: 0,
     fatigue: 0,
     moodSwings: 0
   })
 
-  const handleSymptomChange = (symptom: string, value: [number]) => {
-    setSymptoms(prev => ({ ...prev, [symptom]: value[0] }))
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+
+  const hasFetchedSuggestions = useRef(false);
+
+  const fetchSuggestions = async () => {
+    if (session) {
+      try {
+        const suggestionResponse = await axios.post(`/api/symptoms/suggestions`, symptoms);
+        if (Array.isArray(suggestionResponse.data.suggestions)) 
+          setSuggestions(suggestionResponse.data.suggestions);
+        else
+          setSuggestions([]);
+        console.log('Suggestions:', suggestionResponse.data.suggestions);
+      } catch (error) {
+        console.error('Error fetching suggestions:', error);
+      }
+    }
   }
+
+  useEffect(() => {
+    const fetchSymptoms = async () => {
+      if (session) {
+        try {
+          const symptomsResponse = await axios.get(`/api/symptoms?userid=${(session?.user as any)?.id}`);
+          if(symptomsResponse.data) 
+            setSymptoms(symptomsResponse.data);
+          console.log('Symptoms:', symptomsResponse.data);
+        } catch (error) {
+          console.error('Error fetching symptoms:', error);
+        }
+      }
+    }
+    fetchSymptoms();
+  }, [session])
+
+  useEffect(() => {
+    // Check if all symptoms are zero
+    const hasNonZeroSymptom = Object.values(symptoms).some(value => value !== 0);
+
+    if (hasNonZeroSymptom && !hasFetchedSuggestions.current) {
+      fetchSuggestions();  // Fetch suggestions if any symptom is non-zero
+      hasFetchedSuggestions.current = true;  // Mark as fetched
+    }
+  }, [symptoms]);  
+
+  const handleSymptomChange = (symptom: string, value: [number]) => {
+    setSymptoms(prev => ({ ...prev, [symptom]: value[0] }));
+
+    console.log('Saving metrics:', symptoms);
+  }
+
+  const handleSaveSymptoms = async (updatedSymptoms: typeof symptoms) => {
+    if (session) {
+      try {
+        fetchSuggestions();
+        const body = {
+          userId: parseInt((session?.user as any)?.id, 10),
+          nausea: updatedSymptoms.nausea,
+          fatigue: updatedSymptoms.fatigue,
+          moodSwings: updatedSymptoms.moodSwings,
+          createdAt: new Date(),
+        };
+        await axios.post('/api/symptoms', body);
+      } catch (error) {
+        console.error('Error updating symptoms:', (error as any).response.data);
+      }
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -50,10 +119,14 @@ export default function SymptomTracker() {
         </div>
       </motion.div>
 
+      <motion.div initial="hidden" animate="visible" variants={fadeIn} transition={{ duration: 0.5, delay: 0.6 }}>
+        <Button className="mt-6" onClick={() => handleSaveSymptoms(symptoms)}>Save Today&apos;s Symptoms</Button>
+      </motion.div>
+
       <motion.div initial="hidden" animate="visible" variants={fadeIn} transition={{ duration: 0.5, delay: 0.4 }}>
         <Card className="mt-8">
           <CardHeader>
-            <CardTitle>AI Suggestions</CardTitle>
+            <CardTitle>Suggestions</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-start space-x-2">
@@ -61,9 +134,9 @@ export default function SymptomTracker() {
               <div>
                 <p className="font-semibold">Based on your symptom tracking:</p>
                 <ul className="list-disc pl-5 mt-2 space-y-2">
-                  <li>Try eating small, frequent meals to help with nausea</li>
-                  <li>Consider taking short naps during the day to combat fatigue</li>
-                  <li>Practice relaxation techniques like deep breathing for mood swings</li>
+                  {suggestions.map((suggestion, index) => (
+                  <li key={index}>{suggestion}</li>
+                  ))}
                 </ul>
                 <p className="mt-4 text-sm text-gray-600">If symptoms persist or worsen, please consult your healthcare provider.</p>
               </div>
@@ -71,11 +144,6 @@ export default function SymptomTracker() {
           </CardContent>
         </Card>
       </motion.div>
-
-      <motion.div initial="hidden" animate="visible" variants={fadeIn} transition={{ duration: 0.5, delay: 0.6 }}>
-        <Button className="mt-6">Save Today&apos;s Symptoms</Button>
-      </motion.div>
-      
     </div>
   )
 }
