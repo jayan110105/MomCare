@@ -39,6 +39,7 @@ model Metrics {
   glucose         Int
   heartRate       Int
   gestationalAge  Int
+
   createdAt       DateTime @default(now())
   userId          Int      @unique
   user            User     @relation(fields: [userId], references: [id])
@@ -48,6 +49,7 @@ model Reminder {
   id        Int      @id @default(autoincrement())
   text      String
   date      DateTime
+
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
 }
@@ -57,6 +59,7 @@ model Symptom {
   nausea      Int
   fatigue     Int
   moodSwings  Int
+
   createdAt   DateTime @default(now())
   userId      Int      @unique
   user        User     @relation(fields: [userId], references: [id])
@@ -74,6 +77,9 @@ model Nutrition {
   carbsReq     Int
   fibre        Int
   fibreReq     Int
+  iron         Int
+  ironReq      Int
+
   createdAt    DateTime @default(now())
   userId       Int      @unique
   user         User     @relation(fields: [userId], references: [id])
@@ -97,9 +103,9 @@ model Mood {
   mood      Int      
   sleep     Float    
   date      DateTime @default(now()) @unique 
+
   userId    Int
   user      User     @relation(fields: [userId], references: [id]) 
-
   @@index([userId, date]) 
 }
 
@@ -107,6 +113,7 @@ model Checklist {
   id        Int      @id @default(autoincrement())
   text      String   // The description of the checklist item
   completed Boolean  @default(false) // The status of completion
+
   userId    Int      // Foreign key to link to the User model
   user      User     @relation(fields: [userId], references: [id]) // Relation to User model
 

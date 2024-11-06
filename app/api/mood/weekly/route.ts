@@ -37,7 +37,7 @@ export async function GET(request: Request) {
         const formattedMoods = Array.from({ length: 7 }).map((_, index) => {
             const currentDate = new Date();
             currentDate.setDate(today.getDate() - (6 - index)); // Calculate each date for the last 7 days
-            const currentDay = daysOfWeek[currentDate.getDay()];
+            const currentDay = daysOfWeek[currentDate.getDay()+1];
 
             // Find the mood entry for the current date, if any
             const moodEntry = weeklyMoods.find(entry => {

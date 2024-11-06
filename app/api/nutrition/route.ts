@@ -23,6 +23,7 @@ export async function GET(request: Request) {
             fats: { value: nutritionData.fats, target: nutritionData.fatsReq },
             carbs: { value: nutritionData.carbs, target: nutritionData.carbsReq },
             fibre: { value: nutritionData.fibre, target: nutritionData.fibreReq },
+            iron: { value: nutritionData.iron, target: nutritionData.ironReq },
         };
 
         return NextResponse.json(formattedData, { status: 200 });
@@ -46,6 +47,8 @@ export async function POST(req: Request) {
         fibreReq,
         createdAt,
         userId,
+        iron,
+        ironReq,
     } = await req.json();
 
     if (
@@ -59,6 +62,8 @@ export async function POST(req: Request) {
         carbsReq === undefined ||
         fibre === undefined ||
         fibreReq === undefined ||
+        iron === undefined ||
+        ironReq === undefined ||
         !createdAt ||
         !userId
     ) {
@@ -87,6 +92,8 @@ export async function POST(req: Request) {
                     carbsReq,
                     fibre,
                     fibreReq,
+                    iron,
+                    ironReq,
                 },
             });
         } else {
@@ -102,6 +109,8 @@ export async function POST(req: Request) {
                     carbsReq,
                     fibre,
                     fibreReq,
+                    iron,
+                    ironReq,
                     createdAt: new Date(createdAt),
                     userId: userIdNumber,
                 },

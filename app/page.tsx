@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Heart, LogOut } from 'lucide-react'
+import { Heart, LogOut, Home, Activity, Apple, Dumbbell, Smile, Baby, Sun } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Dashboard from './components/Dashboard'
-// import Milestones from './components/Milestones'
 import SymptomTracker from './components/SymptomTracker'
 import NutritionGuide from './components/NutritionGuide'
 import ExerciseTracker from './components/ExerciseTracker'
@@ -16,44 +16,62 @@ import LaborPrep from './components/LaborPrep'
 import PostpartumCare from './components/PostpartumCare'
 import { signOut } from 'next-auth/react'
 import { useSession } from 'next-auth/react'
-// import { useRouter } from 'next/navigation'
+
+const fadeIn = {
+  hidden: { opacity: 0, y: -20 },
+  visible: { opacity: 1, y: 0 }
+}
 
 export default function MaternalHealthTracker() {
-  // const router = useRouter()
-
   const { data: session } = useSession()
-
   const [activeTab, setActiveTab] = useState("dashboard")
 
   const handleItemClick = (action: string) => {
     if (action === 'logout') {
       signOut({ callbackUrl: '/auth' })
     } 
-    // else if (action === 'settings') {
-    //  Navigate to settings page
-    //   router.push('/settings')
-    // } else if (action === 'profile') {
-    //  router.push('/profile')
-    // }
   }
 
+  const navItems = [
+    { id: "dashboard", label: "Dashboard", icon: Home },
+    { id: "symptoms", label: "Symptoms", icon: Activity },
+    { id: "nutrition", label: "Nutrition", icon: Apple },
+    { id: "exercise", label: "Exercise", icon: Dumbbell },
+    { id: "mentalhealth", label: "Mental Health", icon: Smile },
+    { id: "labor", label: "Labor Prep", icon: Baby },
+    { id: "postpartum", label: "Postpartum", icon: Sun },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-100 to-white">
-      <header className="p-4 bg-white shadow-md">
-        <nav className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Heart className="h-6 w-6 text-pink-500" />
-            <span className="text-xl font-bold text-gray-800">MomCare Pro</span>
+    <div className="min-h-screen bg-[#fadee5]">
+      <motion.header 
+        className="p-4 bg-[#fff5f9] shadow-md"
+        initial="hidden"
+        animate="visible"
+        variants={fadeIn}
+      >
+        <nav className="container mx-auto flex justify-between items-center ">
+          <div className="flex items-center space-x-2 ">
+            <Heart className="h-8 w-8 text-[#e17489]" />
+            <span className="text-2xl font-bold text-[#c56679]">MomCare</span>
           </div>
-          <div className="space-x-2 flex-wrap">
-            <Button variant="ghost" size="sm" onClick={() => setActiveTab("dashboard")}>Dashboard</Button>
-            {/* <Button variant="ghost" size="sm" onClick={() => setActiveTab("milestones")}>Milestones</Button> */}
-            <Button variant="ghost" size="sm" onClick={() => setActiveTab("symptoms")}>Symptoms</Button>
-            <Button variant="ghost" size="sm" onClick={() => setActiveTab("nutrition")}>Nutrition</Button>
-            <Button variant="ghost" size="sm" onClick={() => setActiveTab("exercise")}>Exercise</Button>
-            <Button variant="ghost" size="sm" onClick={() => setActiveTab("mentalhealth")}>Mental Health</Button>
-            <Button variant="ghost" size="sm" onClick={() => setActiveTab("labor")}>Labor Prep</Button>
-            <Button variant="ghost" size="sm" onClick={() => setActiveTab("postpartum")}>Postpartum</Button>
+          <div className="flex items-center space-x-4">
+            {navItems.map((item) => (
+              <Button
+                key={item.id}
+                variant={activeTab === item.id ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActiveTab(item.id)}
+                className={`flex items-center space-x-1 ${
+                  activeTab === item.id
+                    ? "bg-[#e17489] text-white hover:bg-[#e17489]/90"
+                    : "bg-[#e17489]/10 text-[#e17489] hover:bg-[#e17489]/20 hover:text-[#e17489]/90 "
+                }`}
+              >
+                <item.icon className="h-4 w-4" />
+                <span className="hidden md:inline">{item.label}</span>
+              </Button>
+            ))}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -71,15 +89,6 @@ export default function MaternalHealthTracker() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {/* <DropdownMenuItem onClick={() => handleItemClick('profile')}>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleItemClick('settings')}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator /> */}
                 <DropdownMenuItem onClick={() => handleItemClick('logout')}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
@@ -88,16 +97,13 @@ export default function MaternalHealthTracker() {
             </DropdownMenu>
           </div>
         </nav>
-      </header>
+      </motion.header>
 
       <main className="container mx-auto mt-8 p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsContent value="dashboard">
             <Dashboard />
           </TabsContent>
-          {/* <TabsContent value="milestones">
-            <Milestones />
-          </TabsContent> */}
           <TabsContent value="symptoms">
             <SymptomTracker />
           </TabsContent>
@@ -119,12 +125,26 @@ export default function MaternalHealthTracker() {
         </Tabs>
       </main>
 
-      <footer className="mt-16 bg-gray-100 py-8">
-        <div className="container mx-auto text-center text-gray-600">
-          <p>&copy; 2024 MomCare Pro. All rights reserved.</p>
-          <p className="mt-2">Always consult with your healthcare provider for medical advice.</p>
+      <motion.footer 
+        className="mt-16 bg-[#fff5f9] py-8"
+        initial="hidden"
+        animate="visible"
+        variants={fadeIn}
+      >
+        <div className="container mx-auto text-center">
+          <div className="flex justify-center items-center mb-4">
+            <Heart className="h-6 w-6 text-[#e17489] mr-2" />
+            <span className="text-xl font-bold text-[#c56679]">MomCare Pro</span>
+          </div>
+          {/* <p className="text-gray-600">&copy; 2024 MomCare. All rights reserved.</p> */}
+          <p className="mt-2 text-gray-500">Always consult with your healthcare provider for medical advice.</p>
+          {/* <div className="mt-4 flex justify-center space-x-4">
+            <a href="#" className="text-gray-600 hover:text-pink-500 transition-colors">Privacy Policy</a>
+            <a href="#" className="text-gray-600 hover:text-pink-500 transition-colors">Terms of Service</a>
+            <a href="#" className="text-gray-600 hover:text-pink-500 transition-colors">Contact Us</a>
+          </div> */}
         </div>
-      </footer>
+      </motion.footer>
     </div>
   )
 }

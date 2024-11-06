@@ -1,18 +1,22 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input"
-import { Heart, Droplet, Plus } from 'lucide-react'
+import { Heart, Droplet, Plus, Clock, CheckCircle2 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import axios from 'axios'
-
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 }
+}
+
+const slideIn = {
+  hidden: { opacity: 0, x: -20 },
+  visible: { opacity: 1, x: 0 }
 }
 
 export default function LaborPrep() {
@@ -37,7 +41,7 @@ export default function LaborPrep() {
       }
     }
     fetchChecklist()
-  },[session])
+  }, [session])
 
   const saveChecklist = async (updatedItem: typeof newItem) => {
     if (session) {
@@ -82,31 +86,28 @@ export default function LaborPrep() {
   }
 
   const toggleChecklistItem = async (id: number) => {
-    // Update the local state immediately for UI responsiveness
     setChecklist(checklist.map(item => 
       item.id === id ? { ...item, completed: !item.completed } : item
-    ));
+    ))
   
-    // Find the current completed status to toggle it correctly
-    const currentItem = checklist.find(item => item.id === id);
-    if (!currentItem) return;
+    const currentItem = checklist.find(item => item.id === id)
+    if (!currentItem) return
   
     try {
-      // Make the PUT request using axios to update the completed status on the server
       await axios.put('/api/laborPrep', {
         id,
         completed: !currentItem.completed,
-      });
+      })
     } catch (error) {
-      console.error('Error updating checklist item:', error);
+      console.error('Error updating checklist item:', error)
     }
-  };
+  }
 
   const addChecklistItem = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (newItem.trim() !== "") {
       setChecklist([...checklist, { id: Date.now(), text: newItem, completed: false }])
-      saveChecklist(newItem);
+      saveChecklist(newItem)
       setNewItem("")
     }
   }
@@ -118,71 +119,108 @@ export default function LaborPrep() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <motion.div initial="hidden" animate="visible" variants={fadeIn} transition={{ duration: 0.5 }}>
-        <h2 className="text-3xl font-bold text-gray-800 mb-4">Labor Preparation</h2>
+        <h2 className="text-3xl font-bold text-[#c56679] mb-6">Labor Preparation</h2>
       </motion.div>
 
       <motion.div initial="hidden" animate="visible" variants={fadeIn} transition={{ duration: 0.5, delay: 0.2 }}>
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card>
+        <div className="grid md:grid-cols-2 gap-8">
+          <Card className="bg-[#fff5f9]">
             <CardHeader>
-              <CardTitle>Contraction Timer</CardTitle>
+              <CardTitle className="text-2xl font-bold text-[#c56679] flex items-center">
+                <Clock className="w-6 h-6 mr-2 text-[#e17489]" />
+                Contraction Timer
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <Button 
                     onClick={addContraction} 
                     disabled={isContractionActive}
-                    className={isContractionActive ? "bg-red-500 hover:bg-red-600" : ""}
+                    className={`text-white font-semibold py-2 px-4 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 bg-[#e17489] hover:bg-[#e17489]`}
                   >
                     {isContractionActive ? "Contraction Active" : "Start Contraction"}
                   </Button>
-                  <Button onClick={endContraction} variant="outline" disabled={!isContractionActive}>
+                  <Button 
+                    onClick={endContraction} 
+                    variant="outline" 
+                    disabled={!isContractionActive}
+                    className="border-[#cf3554] font-semibold text-[#a13c50]"
+                  >
                     End Contraction
                   </Button>
                 </div>
                 {isContractionActive && (
-                  <div>
-                    <p className="text-lg font-semibold mb-2">Current Contraction Time: {formatTime(activeContractionTime)}</p>
-                    <Progress value={(activeContractionTime % 60) * 1.67} className="w-full" />
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <p className="text-xl font-semibold mb-2 text-[#c56679]">Current Contraction Time: {formatTime(activeContractionTime)}</p>
+                    <Progress value={(activeContractionTime % 60) * 1.67} className="w-full h-2 text-[#c56679]" />
+                  </motion.div>
                 )}
                 {contractions.length > 0 && (
                   <div>
-                    <h4 className="font-semibold mb-2">Recent Contractions:</h4>
-                    <ul className="space-y-2">
-                      {contractions.slice(-3).reverse().map((contraction, index) => (
-                        <li key={index} className="flex justify-between">
-                          <span>Started: {contraction.start.toLocaleTimeString()}</span>
-                          {contraction.end && (
-                            <span>Duration: {((new Date(contraction.end!).getTime() - new Date(contraction.start).getTime()) / 1000).toFixed(0)}s</span>
-                          )}
-                        </li>
-                      ))}
+                    <h4 className="font-semibold mb-3 text-lg text-[#c56679]">Recent Contractions:</h4>
+                    <ul className="space-y-3">
+                      <AnimatePresence>
+                        {contractions.slice(-3).reverse().map((contraction, index) => (
+                          <motion.li 
+                            key={index} 
+                            className="flex justify-between bg-white p-3 rounded-lg shadow-sm"
+                            initial="hidden"
+                            animate="visible"
+                            exit="hidden"
+                            variants={slideIn}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <span className="text-[#c56679]">Started: {contraction.start.toLocaleTimeString()}</span>
+                            {contraction.end && (
+                              <span className="font-semibold text-[#c56679]">
+                                Duration: {((new Date(contraction.end!).getTime() - new Date(contraction.start).getTime()) / 1000).toFixed(0)}s
+                              </span>
+                            )}
+                          </motion.li>
+                        ))}
+                      </AnimatePresence>
                     </ul>
                   </div>
                 )}
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-[#fff5f9]">
             <CardHeader>
-              <CardTitle className="flex items-center">
+              <CardTitle className="text-2xl font-bold text-[#c56679] flex items-center">
+                <Heart className="w-6 h-6 mr-2 text-[#e17489]" />
                 When to Go to the Hospital
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2">
-                <li className="flex items-center">
-                  <Heart className="w-5 h-5 mr-2 text-red-500" />
-                  <span>Contractions every 5 minutes, lasting 1 minute, for 1 hour </span>
-                </li>
-                <li className="flex items-center">
-                  <Droplet className="w-5 h-5 mr-2 text-blue-400" />
-                  <span>Water breaks or you experience heavy bleeding</span>
-                </li>
+              <ul className="space-y-4">
+                <motion.li 
+                  className="flex items-center bg-white p-4 rounded-lg shadow-sm"
+                  initial="hidden"
+                  animate="visible"
+                  variants={slideIn}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                >
+                  <Heart className="w-6 h-6 mr-3 text-[#e17489]" />
+                  <span className="">Contractions every 5 minutes, lasting 1 minute, for 1 hour</span>
+                </motion.li>
+                <motion.li 
+                  className="flex items-center bg-white p-4 rounded-lg shadow-sm"
+                  initial="hidden"
+                  animate="visible"
+                  variants={slideIn}
+                  transition={{ duration: 0.3, delay: 0.2 }}
+                >
+                  <Droplet className="w-6 h-6 mr-3 text-[#e17489]" />
+                  <span className="">Water breaks or you experience heavy bleeding</span>
+                </motion.li>
               </ul>
             </CardContent>
           </Card>
@@ -190,34 +228,50 @@ export default function LaborPrep() {
       </motion.div>
 
       <motion.div initial="hidden" animate="visible" variants={fadeIn} transition={{ duration: 0.5, delay: 0.4 }}>
-        <Card>
+        <Card className="bg-[#fff5f9]">
           <CardHeader>
-            <CardTitle>Labor Preparation Checklist</CardTitle>
+            <CardTitle className="text-2xl font-bold text-[#c56679] flex items-center">
+              <CheckCircle2 className="w-6 h-6 mr-2 text-[#e17489]" />
+              Labor Preparation Checklist
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={addChecklistItem} className="flex space-x-2 mb-4">
+            <form onSubmit={addChecklistItem} className="flex space-x-2 mb-6">
               <Input
                 type="text"
                 placeholder="Add new item"
                 value={newItem}
                 onChange={(e) => setNewItem(e.target.value)}
-                className="flex-grow"
+                className="flex-grow rounded-full"
               />
-              <Button type="submit">
+              <Button 
+                type="submit"
+                className="ml-4 text-white font-semibold py-2 px-4 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:bg-[#e17489] hover:-translate-y-1 hover:scale-105 bg-[#e17489]"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Add
               </Button>
             </form>
-            <ul className="space-y-2">
-              {checklist.map(item => (
-                <ChecklistItem 
-                  key={item.id}
-                  id={item.id}
-                  text={item.text}
-                  completed={item.completed}
-                  onToggle={toggleChecklistItem}
-                />
-              ))}
+            <ul className="space-y-3">
+              <AnimatePresence>
+                {checklist.map(item => (
+                  <motion.li
+                    key={item.id}
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    variants={slideIn}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <ChecklistItem 
+                      id={item.id}
+                      text={item.text}
+                      completed={item.completed}
+                      onToggle={toggleChecklistItem}
+                    />
+                  </motion.li>
+                ))}
+              </AnimatePresence>
             </ul>
           </CardContent>
         </Card>
@@ -235,11 +289,12 @@ interface ChecklistItemProps {
 
 function ChecklistItem({ id, text, completed, onToggle }: ChecklistItemProps) {
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-3 bg-white p-3 rounded-lg shadow-sm">
       <Checkbox
         id={`task-${id}`}
         checked={completed}
         onCheckedChange={() => onToggle(id)}
+        className="border-[#c56679] text-[#c56679] checked:bg-[#e17489]"
       />
       <label
         htmlFor={`task-${id}`}
