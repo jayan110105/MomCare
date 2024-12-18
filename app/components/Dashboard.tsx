@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent} from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -154,7 +154,7 @@ export default function Dashboard() {
         feature4: body.glucose,
         feature5: body.heartRate,
       };
-      const response = await axios.post('http://localhost:8000/predict_risk', inputData);
+      const response = await axios.post('http://mom-care-backend.vercel.app/predict_risk', inputData);
       setPrediction(response.data.prediction);
     } catch (error) {
       console.error('Error fetching prediction:', error);
@@ -251,7 +251,7 @@ export default function Dashboard() {
                     </p>
                   </div>
                 ) : (
-                  <p className="text-gray-700">Click "Update Risk" to get your latest risk assessment.</p>
+                  <p className="text-gray-700">Click &quot;Update Risk&quot; to get your latest risk assessment.</p>
                 )}
               </div>
             </div>

@@ -13,6 +13,7 @@ import NutritionGuide from './components/NutritionGuide'
 import ExerciseTracker from './components/ExerciseTracker'
 import MentalHealth from './components/MentalHealth'
 import LaborPrep from './components/LaborPrep'
+import HeroPage from './components/HeroPage'
 import PostpartumCare from './components/PostpartumCare'
 import { signOut } from 'next-auth/react'
 import { useSession } from 'next-auth/react'
@@ -26,9 +27,13 @@ export default function MaternalHealthTracker() {
   const { data: session } = useSession()
   const [activeTab, setActiveTab] = useState("dashboard")
 
+  if (!session) {
+    return <HeroPage />
+  }
+
   const handleItemClick = (action: string) => {
     if (action === 'logout') {
-      signOut({ callbackUrl: '/auth' })
+      signOut({ callbackUrl: '/' })
     } 
   }
 
@@ -136,13 +141,7 @@ export default function MaternalHealthTracker() {
             <Heart className="h-6 w-6 text-[#e17489] mr-2" />
             <span className="text-xl font-bold text-[#c56679]">MomCare Pro</span>
           </div>
-          {/* <p className="text-gray-600">&copy; 2024 MomCare. All rights reserved.</p> */}
           <p className="mt-2 text-gray-500">Always consult with your healthcare provider for medical advice.</p>
-          {/* <div className="mt-4 flex justify-center space-x-4">
-            <a href="#" className="text-gray-600 hover:text-pink-500 transition-colors">Privacy Policy</a>
-            <a href="#" className="text-gray-600 hover:text-pink-500 transition-colors">Terms of Service</a>
-            <a href="#" className="text-gray-600 hover:text-pink-500 transition-colors">Contact Us</a>
-          </div> */}
         </div>
       </motion.footer>
     </div>
