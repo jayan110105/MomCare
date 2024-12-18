@@ -19,7 +19,7 @@ const fadeIn = {
   visible: { opacity: 1, y: 0 }
 }
 
-const exerciseIcons = {
+const exerciseIcons: { [key: string]: React.ComponentType<any> } = {
   Walking: Footprints,
   Yoga: Flower,
   Swimming: Waves,
@@ -37,8 +37,8 @@ export default function ExerciseTracker() {
   const { data: session } = useSession()
 
   const [activeTab, setActiveTab] = useState("today")
-  const [exerciseLog, setExerciseLog] = useState<{ type: string; duration: number; intensity: string }[]>([])
-  const [newExercise, setNewExercise] = useState({ type: '', duration: '', intensity: '' })
+  const [exerciseLog, setExerciseLog] = useState<{ type: string; duration: number; intensity: keyof typeof intensityColors }[]>([])
+  const [newExercise, setNewExercise] = useState<{ type: string; duration: string; intensity: keyof typeof intensityColors }>({ type: '', duration: '', intensity: 'Low' })
   const [totalMinutesExercised, setTotalMinutesExercised] = useState(0)
   const [activeDays, setActiveDays] = useState(0)
   const [recommendations, setRecommendations] = useState<{ type: string; description: string }[]>([])
@@ -49,7 +49,7 @@ export default function ExerciseTracker() {
     if (newExercise.type && newExercise.duration && newExercise.intensity) {
       setExerciseLog([...exerciseLog, { ...newExercise, duration: parseInt(newExercise.duration) }])
       handleAddExercise(newExercise)
-      setNewExercise({ type: '', duration: '', intensity: '' })
+      setNewExercise({ type: '', duration: '', intensity: 'Low' })
       setIsDialogOpen(false)
     }
   }
@@ -184,7 +184,7 @@ export default function ExerciseTracker() {
                           </Label>
                           <Select
                             value={newExercise.intensity}
-                            onValueChange={(value) => setNewExercise({ ...newExercise, intensity: value })}
+                            onValueChange={(value) => setNewExercise({ ...newExercise, intensity: value as keyof typeof intensityColors })}
                           >
                             <SelectTrigger className="col-span-3 rounded-full">
                               <SelectValue placeholder="Select intensity" />
