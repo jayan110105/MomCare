@@ -19,13 +19,22 @@ export default function MaternalHealthChatbot() {
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
+  interface Message {
+    role: string;
+    content: string;
+  }
+
+  interface ApiResponse {
+    reply: string;
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!input.trim()) return; // Prevent sending empty messages
 
     // Add user message to chat
-    const userMessage = { role: 'user', content: input };
+    const userMessage: Message = { role: 'user', content: input };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
 
     // Clear input and set loading state
@@ -46,14 +55,14 @@ export default function MaternalHealthChatbot() {
         throw new Error('Failed to fetch the chat response');
       }
 
-      const data = await response.json();
+      const data: ApiResponse = await response.json();
 
       // Add assistant's response to chat
-      const botMessage = { role: 'assistant', content: data.reply };
+      const botMessage: Message = { role: 'assistant', content: data.reply };
       setMessages((prevMessages) => [...prevMessages, botMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
-      const errorMessage = { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' };
+      const errorMessage: Message = { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' };
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
     } finally {
       setIsLoading(false);
