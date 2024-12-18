@@ -136,7 +136,7 @@ export default function SymptomTracker() {
           className="text-white font-semibold py-2 px-4 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:bg-[#e17489] hover:-translate-y-1 hover:scale-105 bg-[#e17489] ml-auto"
           onClick={() => handleSaveSymptoms(symptoms)}
         >
-          Save Today's Symptoms
+          Save Today&apos;s Symptoms
         </Button>
       </motion.div>
 
@@ -187,7 +187,7 @@ interface SymptomCardProps {
   color: string;
 }
 
-function SymptomCard({ title, value, icon, onChange, color }: SymptomCardProps) {
+function SymptomCard({ title, value, icon, onChange}: SymptomCardProps) {
   return (
     <Card className={`bg-[#fff5f9] hover:shadow-lg transition-shadow duration-300`}>
       <CardContent className="p-6 flex flex-col items-center">

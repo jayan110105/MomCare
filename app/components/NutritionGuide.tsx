@@ -35,7 +35,7 @@ export default function NutritionGuide() {
 
   const [isVegetarian, setIsVegetarian] = useState(false)
   const [recommendations, setRecommendations] = useState<string[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  // const [isLoading, setIsLoading] = useState(false)
 
   const handleNutritionChange = (
     nutrient: 'calories' | 'protein' | 'fats' | 'carbs' | 'fibre' | 'iron',
@@ -124,7 +124,7 @@ export default function NutritionGuide() {
         <div className="grid md:grid-cols-2 gap-8">
           <Card className="bg-[#fff5f9]">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold text-[#c56679]">Today's Nutrition</CardTitle>
+              <CardTitle className="text-2xl font-bold text-[#c56679]">Today&apos;s Nutrition</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
@@ -229,7 +229,7 @@ export default function NutritionGuide() {
                     </motion.div>
                   ))}
                 </AnimatePresence>
-                {recommendations.length === 0 && !isLoading && (
+                {recommendations.length === 0 && (
                   <motion.p
                     initial="hidden"
                     animate="visible"
@@ -239,7 +239,7 @@ export default function NutritionGuide() {
                     No specific recommendations at the moment. Keep maintaining a balanced diet!
                   </motion.p>
                 )}
-                {isLoading && (
+                {(
                   <motion.div
                     initial="hidden"
                     animate="visible"
@@ -267,7 +267,7 @@ interface NutritionProgressProps {
   color: string;
 }
 
-function NutritionProgress({ title, nutrient, value, target, onChange, color }: NutritionProgressProps) {
+function NutritionProgress({ title, nutrient, value, target, onChange}: NutritionProgressProps) {
   const [isEditing, setIsEditing] = useState(false)
 
   return (
@@ -312,22 +312,5 @@ function NutritionProgress({ title, nutrient, value, target, onChange, color }: 
       </div>
       <Progress value={(value/target) * 100} max={100} className={`w-full h-2`} />
     </div>
-  )
-}
-
-function MealSuggestion({ icon, meal, suggestion }: { icon: React.ReactNode; meal: string; suggestion: string }) {
-  return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={slideIn}
-      className="flex items-center space-x-3 bg-white p-4 rounded-lg shadow-sm"
-    >
-      <div className="bg-[#e17489] p-2 rounded-full">{icon}</div>
-      <div>
-        <span className="font-semibold text-[#cf4477]">{meal}:</span>
-        <p className="text-gray-600">{suggestion}</p>
-      </div>
-    </motion.div>
   )
 }

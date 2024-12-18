@@ -38,7 +38,7 @@ export default function PostpartumCare() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="mb-4 font-semibold text-[#c56679]">It's important to monitor your emotional health. If you're experiencing any of the following symptoms, please consult your healthcare provider:</p>
+              <p className="mb-4 font-semibold text-[#c56679]">It&apos;s important to monitor your emotional health. If you&apos;re experiencing any of the following symptoms, please consult your healthcare provider:</p>
               <ul className="space-y-3">
                 <AnimatePresence>
                   {[
