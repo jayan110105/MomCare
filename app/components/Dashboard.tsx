@@ -12,7 +12,8 @@ import { Calendar, Info, TrendingUp, Activity, CalendarHeart, HeartPulse, Plus, 
 import { Slider } from "@/components/ui/slider"
 import { useSession } from 'next-auth/react'
 import axios from 'axios'
-import Lottie from 'lottie-react'
+import dynamic from 'next/dynamic';
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 import pregnancyAnimation from '../animations/pregnancy-animation.json'
 
 const fadeIn = {

@@ -13,7 +13,8 @@ import Link from 'next/link'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { useSession } from 'next-auth/react'
 import axios from 'axios'
-import Lottie from 'lottie-react'
+import dynamic from 'next/dynamic';
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 import meditationAnimation from '../animations/meditation.json'
 import MaternalHealthChatbot from './MaternalHealthChatbot'
 

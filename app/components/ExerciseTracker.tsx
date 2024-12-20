@@ -13,7 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { HeartPulse, Footprints, Flower, Dumbbell, Activity, Waves, Plus, Loader2 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import axios from 'axios'
-import Lottie from 'lottie-react'
+import dynamic from 'next/dynamic';
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 import exerciseAnimation from '../animations/exercise-animation.json'
 
 const fadeIn = {
