@@ -72,7 +72,7 @@ export default function NutritionGuide() {
 
   async function fetchNutritionRecommendations() {
     try {
-      const response = await axios.post('http://localhost:8000/recommendations/', {
+      const response = await axios.post('https://momcare.onrender.com/recommendations/', {
         calories: nutritionValues.calories.target- nutritionValues.calories.value,
         fats: nutritionValues.fats.target - nutritionValues.fats.value,
         proteins: nutritionValues.protein.target - nutritionValues.protein.value,

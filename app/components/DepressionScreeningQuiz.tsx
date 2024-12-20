@@ -36,7 +36,7 @@ export default function DepressionScreeningQuiz() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const response = await axios.post('http://localhost:8000/predict_anxiety', data)
+      const response = await axios.post('https://momcare.onrender.com/predict_anxiety', data)
       setPrediction(response.data.prediction)
     } catch (error) {
       console.error('Error:', error)

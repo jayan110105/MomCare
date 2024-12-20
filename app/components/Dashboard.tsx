@@ -157,7 +157,7 @@ export default function Dashboard() {
         feature4: body.glucose,
         feature5: body.heartRate,
       };
-      const response = await axios.post('http://mom-care-backend.vercel.app/predict_risk', inputData);
+      const response = await axios.post('https://momcare.onrender.com/predict_risk', inputData);
       setPrediction(response.data.prediction);
     } catch (error) {
       console.error('Error fetching prediction:', error);
