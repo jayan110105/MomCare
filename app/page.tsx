@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Heart, LogOut, Home, Activity, Apple, Dumbbell, Smile, Baby, Sun } from 'lucide-react'
+import { Heart, LogOut, Home, Activity, Apple, Dumbbell, Smile, Baby, Sun} from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Dashboard from './components/Dashboard'
 import SymptomTracker from './components/SymptomTracker'
@@ -15,8 +15,7 @@ import MentalHealth from './components/MentalHealth'
 import LaborPrep from './components/LaborPrep'
 import HeroPage from './components/HeroPage'
 import PostpartumCare from './components/PostpartumCare'
-import { signOut } from 'next-auth/react'
-import { useSession } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 
 const fadeIn = {
   hidden: { opacity: 0, y: -20 },
@@ -48,19 +47,19 @@ export default function MaternalHealthTracker() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#fadee5]">
+    <div className="min-h-screen bg-[#fadee5] overflow-hidden">
       <motion.header 
         className="p-4 bg-[#fff5f9] shadow-md"
         initial="hidden"
         animate="visible"
         variants={fadeIn}
       >
-        <nav className="container mx-auto flex justify-between items-center ">
-          <div className="flex items-center space-x-2 ">
+        <nav className="container mx-auto flex justify-between items-center">
+          <div className="flex items-center space-x-2">
             <Heart className="h-8 w-8 text-[#e17489]" />
             <span className="text-2xl font-bold text-[#c56679]">MomCare</span>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4">
             {navItems.map((item) => (
               <Button
                 key={item.id}
@@ -70,19 +69,21 @@ export default function MaternalHealthTracker() {
                 className={`flex items-center space-x-1 ${
                   activeTab === item.id
                     ? "bg-[#e17489] text-white hover:bg-[#e17489]/90"
-                    : "bg-[#e17489]/10 text-[#e17489] hover:bg-[#e17489]/20 hover:text-[#e17489]/90 "
+                    : "bg-[#e17489]/10 text-[#e17489] hover:bg-[#e17489]/20 hover:text-[#e17489]/90"
                 }`}
               >
                 <item.icon className="h-4 w-4" />
-                <span className="hidden md:inline">{item.label}</span>
+                <span>{item.label}</span>
               </Button>
             ))}
+          </div>
+          <div className="flex items-center space-x-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src="" alt="User avatar" />
-                    <AvatarFallback>{session?.user?.name ? session.user.name.charAt(0) : 'SC'}</AvatarFallback>
+                    <AvatarFallback>{session?.user?.name ? session.user.name.charAt(0) : 'MC'}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -94,6 +95,12 @@ export default function MaternalHealthTracker() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {navItems.map((item) => (
+                  <DropdownMenuItem key={item.id} onClick={() => setActiveTab(item.id)} className="md:hidden">
+                    <item.icon className="mr-2 h-4 w-4" />
+                    <span>{item.label}</span>
+                  </DropdownMenuItem>
+                ))}
                 <DropdownMenuItem onClick={() => handleItemClick('logout')}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
