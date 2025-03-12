@@ -27,15 +27,6 @@ const staggeredFadeIn = {
   }),
 }
 
-const heartbeat = {
-  scale: [1, 1.1, 1],
-  transition: {
-    duration: 0.8,
-    repeat: Infinity,
-    repeatType: 'reverse' as const
-  }
-}
-
 export default function HeroPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#fff5f9] to-white flex flex-col">
@@ -71,18 +62,6 @@ export default function HeroPage() {
                     </motion.div>
                   </Link>
                 </Button>
-              </motion.div>
-              <motion.div 
-                className="mt-8 px-2 flex items-center justify-center md:justify-start text-[#c56679]"
-                initial="hidden"
-                animate="visible"
-                variants={fadeIn}
-                transition={{ delay: 0.3 }}
-              >
-                <motion.div animate={heartbeat}>
-                  <IoIosHeart className="w-8 h-8 mr-3" />
-                </motion.div>
-                <span className="text-lg font-semibold">Trusted by 95% of moms</span>
               </motion.div>
             </motion.div>
             <motion.div

@@ -111,7 +111,7 @@ export default function AuthPage() {
             </CardHeader>
             <CardContent>
               <TabsContent value="signin">
-                <form onSubmit={handleSignin}>
+                <form id="signin-form" onSubmit={handleSignin}>
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="email" className="text-[#c56679]">Email</Label>
@@ -147,9 +147,26 @@ export default function AuthPage() {
                       <Checkbox id="remember" />
                       <label htmlFor="remember" className="text-sm text-[#c56679]">Remember me</label>
                     </div>
-                    <Button type="submit" className="w-full bg-[#e17489] hover:bg-[#c56679] text-white rounded-full" disabled={loading}>
-                      {loading ? 'Signing In...' : 'Sign In'}
-                    </Button>
+                    <div className='flex justify-between gap-4'>
+                        <Button 
+                        type="button" 
+                        className="w-full bg-[#e17489] hover:bg-[#c56679] text-white rounded-full"
+                        onClick={() => {
+                          setEmail('demo@example.com');
+                          setPassword('demo1234');
+                          setTimeout(() => {
+                          const form = document.getElementById('signin-form') as HTMLFormElement;
+                          if (form) form.requestSubmit();
+                          }, 100);
+                        }}
+                        disabled={loading}
+                        >
+                        Demo Account
+                        </Button>
+                      <Button type="submit" className="w-full bg-[#e17489] hover:bg-[#c56679] text-white rounded-full" disabled={loading}>
+                        {loading ? 'Signing In...' : 'Sign In'}
+                      </Button>
+                    </div>
                   </div>
                 </form>
               </TabsContent>
