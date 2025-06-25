@@ -39,7 +39,7 @@ Follow these instructions to set up and run the project locally.
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/mom_care.git
+    git clone https://github.com/jayan110105/mom_care.git
     cd mom_care
     ```
 
